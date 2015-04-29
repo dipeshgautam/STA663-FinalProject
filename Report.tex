@@ -31,16 +31,16 @@
 
 \section{Background}
 \subsection{Indian Buffet Process (IBP)}
-The Indian Buffet is an adaptation of Chinese Buffett Process where each object instead of being associated with a single latent class can  be associated with multiple classes. This is particularly useful when each object has multile latent features and by associating objects with a single class we cannot partition them into homogeneous subsets.
+The Indian Buffet is an adaptation of Chinese Buffett Process where each object instead of being associated with a single latent class can  be associated with multiple classes. This is particularly useful when each object has multiple latent features and by associating objects with a single class we cannot partition them into homogeneous subsets.
 
-In the Indian buffet process, $N$ customers enter a restaurant one after another. Each customer encounters a buffet 
-consisting of infinitely many dishes arranged in a line. The first customer starts at the left of the buffet and 
-takes a serving from each dish, stopping after a Poisson($\alpha$) number of dishes. The $i$th customer moves along the buffet, 
-sampling dishes in proportion to their popularity, taking dish $k$ with probability $\frac{m_k}{i}$ , where $m_k$ is the number of 
-previous customers who have sampled that dish. Having reached the end of all previous sampled dishes, the $i$th customer 
+In the Indian buffet process, $N$ customers enter a restaurant one after another. Each customer encounters a buffet
+consisting of infinitely many dishes arranged in a line. The first customer starts at the left of the buffet and
+takes a serving from each dish, stopping after a Poisson($\alpha$) number of dishes. The $i$th customer moves along the buffet,
+sampling dishes in proportion to their popularity, taking dish $k$ with probability $\frac{m_k}{i}$ , where $m_k$ is the number of
+previous customers who have sampled that dish. Having reached the end of all previous sampled dishes, the $i$th customer
 then tries a Poisson($\frac{\alpha}{i}$) number of new dishes. Which costumer chose which dishes is indicated using a binary matrix \textbf{Z} with $N$ rows and infinitely many columns(corresponding to the infinitely many selection of dished), where $z_{ik}$ = 1 if the $i$th costumer sampled $k$th dish.
 
-IBP can be used as a prior in models for unsupervised learning. An example of which is presentd in the paper by Griffiths and Ghahramani, where IBP is used as a prior in linear-Gaussian binary latent feature model.
+IBP can be used as a prior in models for unsupervised learning. An example of which is presented in the paper by Griffiths and Ghahramani, where IBP is used as a prior in linear-Gaussian binary latent feature model.
 
 
 \section{Implementation}
@@ -63,12 +63,12 @@ P(X|Z,\sigma_X, \sigma_A) = \frac{1}{(2 \pi)^{ND/2} (\sigma_X)^{(N-K)D}(\sigma_A
 After we have the likelihood and the prior given by IBP,
 \item{full conditional posterior for \textbf{Z} can be calculated as:
 $$
-P(z_{ik}|X,Z_{-(i,k)},\sigma_X,\sigma_A) \propto  P(X|Z,\sigma_X, \sigma_A) * P(z_{ik}=1|\textbf{z}_{-i,k}) 
+P(z_{ik}|X,Z_{-(i,k)},\sigma_X,\sigma_A) \propto  P(X|Z,\sigma_X, \sigma_A) * P(z_{ik}=1|\textbf{z}_{-i,k})
 $$
 }
 
 To sample the number of new features for observation $i$, we use a truncated distribution, computing probabilities for a range of values $K_1^{(i)}$ up to an upper bound (say 4). The prior on number of features is given by $Poisson(\frac{\alpha}{N})$.
-Using this prior and the likelihood, we sample the nummber of new features.
+Using this prior and the likelihood, we sample the number of new features.
 
 \item{Full conditional posterior for $\alpha$ is given by:
 $$
@@ -111,7 +111,7 @@ We tried the matrix inversion method described in Griffiths and Ghahramani(2005,
 Even though we were able to improve the performance, due to some numerical errors, we were not able to obtain a stationary MCMC chain using this method. This could be achieved by spending some more time on it but due to time constraints we decided that to look at fixing this at a later time.\\
 
 \subsection{Likelihood function}
-While working on the optimized matrix inversion, we noticed that the matrix that we're inverting i.e. ($Z^TZ+\frac{\sigma_X^2}{\sigma_A^2}I$) actually appears twice inside the likelihood function. So, we looked at removing the redundancy by calculating the matrix and storing it. We were able to gain some improvement using this method as shown in Table \ref{llcomp} and Table \ref{runtimes}. Since the likelihood function is called numerous times, even the small gain shwon in Table \ref{llcomp} was translated into a substantial gain as shown in Table \ref{runtimes}.\\
+While working on the optimized matrix inversion, we noticed that the matrix that we're inverting i.e. ($Z^TZ+\frac{\sigma_X^2}{\sigma_A^2}I$) actually appears twice inside the likelihood function. So, we looked at removing the redundancy by calculating the matrix and storing it. We were able to gain some improvement using this method as shown in Table \ref{llcomp} and Table \ref{runtimes}. Since the likelihood function is called numerous times, even the small gain shown in Table \ref{llcomp} was translated into a substantial gain as shown in Table \ref{runtimes}.\\
 
 
 \begin{table}[H]
@@ -123,12 +123,6 @@ While working on the optimized matrix inversion, we noticed that the matrix that
 
 \subsection{Cython}
 Another way we looked at improving the performance of the code was by cythonizing the code. We again looked at improving the performance of the likelihood function by cythonizing it. As shwon in Table \ref{runtimes}, we were not able to gain substantial improvements from it.\\
-
-
-\subsection{Parallelization and CUDA}
-Since our algorithm is an MCMC algorithm with serial dependence, parallelization does not seem to be a good idea. One of the ways, parallelization can be done is by splitting the chain into multiple smaller chains and combining them back. We tested it and it showed some improvement in the code but decided against using it as the gain wasn't significant enough as we had to take care of multiple burn-in periods and ignore the loss of markov property due to multiple chains. Also, parallelizing the density calculation for likelihood wasn't an option for our algorithm as we had a discrete density with just two points.
-
-
 \begin{table}[ht]
 \centering
 \caption{Runtime Comparision \label{runtimes}}
@@ -136,32 +130,33 @@ Since our algorithm is an MCMC algorithm with serial dependence, parallelization
 \end{table}
 
 
+\subsection{Parallelization and CUDA}
+Since our algorithm is an MCMC algorithm with serial dependence, parallelization does not seem to be a good idea. One of the ways, parallelization can be done is by splitting the chain into multiple smaller chains and combining them back. We tested it and it showed some improvement in the code but decided against using it as the gain wasn't significant enough as we had to take care of multiple burn-in periods and ignore the loss of Markov property due to multiple chains. Also, parallelizing the density calculation for likelihood wasn't an option for our algorithm as we had a discrete density with just two points.\\
 
-\begin{figure}
-\caption {Original Features and First four simulated objects}
-\includegraphics[width=\linewidth]{figures/Original.png}
-\label{fig:original}
+We also looked at optimizing the code through using CuBLAS library from CUDA. We tested the performance of matrix multiplication using \textit{np.dot} and \textit{cublas.Blas} and found the CuBLAS multiplication to be slower. This can be attributed to the fact that we are working with relatively small matrices of dimensions like $KXK$, $100XK$ where K is smaller than 10 and  $100X36$. So, the overhead in was larger than the gain from gpu calculation resulting in slower time for CuBLAS matrix multiplication.
+
+\section{Results}
+We ran our sampler with the improved likelihood calculation for 1000 iterations. Our data was simulated with 4 latent features. The distribution of $K_+$(total features detected at each iteration) is shown in Fig. \ref{fig:dist}(a). Although we see that the mode of the number of features is 5, with significant iterations where the number of features is 7, we can see from Fig. \ref{fig:dist}(b) that most of the objects actually had between 1 and 4 features with very few of them with 5 or more features. These outliers can be attributed to the noise and variance in the data simulation and ignored. So, we can conclude that the algorithm correctly predicts and detects the existence of 4 latent features in the simulated data.\\
+Trace plot for $\sigma_X$, $\sigma_A$, and $\alpha$ is shown in Fig. \ref{fig:trace}. We see that $\sigma_X$ is converging to it's true value of $0.5$ and the other parameters also show proper convergence validating the authenticity of the algorithm.\\ 
+\begin{figure}[ht]
+\caption {Distribution of Kplus and mean number of features per object}
+\includegraphics[width=\linewidth]{figures/kDistribution.png}
+\label{fig:dist}
 \end{figure}
 
-
-
-\begin{figure}
-\caption {Features Detected after MCMC and First four recreated objects}
-\includegraphics[width=\linewidth]{figures/Detected.png}
-\label{fig:detected}
-\end{figure}
-
-\begin{figure}
+\begin{figure}[ht]
 \caption {Traceplots for $\sigma_X$, $\sigma_A$ and $\alpha$ after burn-in}
 \includegraphics[width=\linewidth]{figures/Trace.png}
 \label{fig:trace}
 \end{figure}
 
-\begin{figure}
-\caption {Distribution of Kplus}
-\includegraphics[width=\linewidth]{figures/kDistribution.png}
-\label{fig:dist}
+
+\begin{figure}[ht]
+\caption {Original Features and First four simulated objects}
+\includegraphics[width=\linewidth]{figures/Original.png}
+\label{fig:original}
 \end{figure}
+
 
 \begin{table}[ht]
 \centering
@@ -170,6 +165,11 @@ Since our algorithm is an MCMC algorithm with serial dependence, parallelization
 \end{table}
 
 
+\begin{figure}[ht]
+\caption {Features Detected after MCMC and First four recreated objects}
+\includegraphics[width=\linewidth]{figures/Detected.png}
+\label{fig:detected}
+\end{figure}
 
 
 
