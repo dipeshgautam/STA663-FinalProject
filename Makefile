@@ -1,9 +1,9 @@
-Report.pdf: Report.tex profiler.txt latex_tables/Runtimes.tex latex_tables/inverseMethods.tex figures/Original.png figures/Detected.png figures/kDistribution.png figures/Trace.png latex_tables/featuresPresent.tex latex_tables/llcomp.tex
+Report.pdf: Report.tex profiler.txt latex_tables/Runtimes.tex latex_tables/inverseMethods.tex figures/Original.png figures/Detected.png figures/kDistribution.png figures/Trace.png latex_tables/llcomp.tex
 	pdflatex Report
 	pdflatex Report
 	pdflatex Report
 
-latex_tables/featuresPresent.tex figures/Original.png figures/Detected.png figures/kDistribution.png figures/Trace.png: python_scripts/createPlots.py Data/chainZ.npy Data/chainK.npy Data/chainSigmaX.npy Data/chainSigmaA.npy Data/chainAlpha.npy Data/SimulatedData.npy Data/ZOriginal.npy Data/AOriginal.npy
+figures/Original.png figures/Detected.png figures/kDistribution.png figures/Trace.png: python_scripts/createPlots.py Data/chainZ.npy Data/chainK.npy Data/chainSigmaX.npy Data/chainSigmaA.npy Data/chainAlpha.npy Data/SimulatedData.npy Data/ZOriginal.npy Data/AOriginal.npy
 	python python_scripts/createPlots.py
 
 latex_tables/inverseMethods.tex: python_scripts/compareInverse.py
