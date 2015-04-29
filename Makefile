@@ -9,8 +9,11 @@ latex_tables/featuresDetected.tex figures/Original.png figures/Detected.png figu
 latex_tables/inverseMethods.tex: python_scripts/compareInverse.py
 	python python_scripts/compareInverse.py
 
-latex_tables/Runtimes.tex Data/chainZ.npy Data/chainK.npy Data/chainSigmaX.npy Data/chainSigmaA.npy Data/chainAlpha.npy: python_scripts/compareSampler.py Data/SimulatedData.npy python_scripts/Cython_functions.so
+latex_tables/Runtimes.tex: python_scripts/compareSampler.py Data/SimulatedData.npy python_scripts/Cython_functions.so
 	python python_scripts/compareSampler.py
+    
+Data/chainZ.npy Data/chainK.npy Data/chainSigmaX.npy Data/chainSigmaA.npy Data/chainAlpha.npy: Data/SimulatedData.npy python_scripts/finalsimulation.py
+	python python_scripts/finalsimulation.py
 
 Cython_functions.so:
 	cd python_scripts ; python Cython_setup.py build_ext --inplace; cd ..

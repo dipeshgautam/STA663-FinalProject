@@ -14,20 +14,21 @@ sigmaX=1.
 sigmaA=1.
 alpha=1.
 maxNew=4
-niter=30
+niter=1000
+BurnIn = 200
 
 t0= time.time()
-sampler0(X, niter, 0, sigmaX, sigmaA, alpha, N, D, maxNew)
+sampler0(X, niter,BurnIn, sigmaX, sigmaA, alpha, N, D, maxNew)
 t1=time.time()
 elap1 = t1-t0
 
 t0= time.time()
-sampler(X, niter, 0, sigmaX, sigmaA,alpha, N, D, maxNew)
+sampler(X, niter, BurnIn, sigmaX, sigmaA,alpha, N, D, maxNew)
 t1=time.time()
 elap2 = t1-t0
 
 t0= time.time()
-sampler(X, niter, 0, sigmaX, sigmaA,alpha, N, D, maxNew)
+sampler(X, niter, BurnIn, sigmaX, sigmaA,alpha, N, D, maxNew)
 t1=time.time()
 elap3 = t1-t0
 
