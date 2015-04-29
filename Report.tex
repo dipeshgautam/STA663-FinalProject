@@ -15,7 +15,7 @@
  framesep=2em, % separation between frame and text
  rulecolor=\color{Gray},
  %
- label=\fbox{\color{Black}profiler.txt},
+ label=\fbox{\color{Black}Profiling Result},
  labelposition=topline,
  %
  commandchars=\|\(\), % escape character and argument delimiters for
@@ -24,13 +24,13 @@
 }
 
 \begin{document}
-\title{STA663 Final Project \\ Infinite Latent Feature Models and the Indian Buffet Process}
+\title{STA663 Final Project \\ Indian Buffet Process and its application in the Infinite Latent Feature Model}
 \author{Dipesh Gautam}
 \date{\today}
 \maketitle
 
-\section{Indian Buffet Process (IBP)}
-
+\section{Background}
+\subsection{Indian Buffet Process (IBP)}
 The Indian Buffet is an adaptation of Chinese Buffett Process where each object instead of being associated with a single latent class can  be associated with multiple classes. This is particularly useful when each object has multile latent features and by associating objects with a single class we cannot partition them into homogeneous subsets.
 
 In the Indian buffet process, $N$ customers enter a restaurant one after another. Each customer encounters a buffet 
@@ -43,8 +43,8 @@ then tries a Poisson($\frac{\alpha}{i}$) number of new dishes. Which costumer ch
 IBP can be used as a prior in models for unsupervised learning. An example of which is presentd in the paper by Griffiths and Ghahramani, where IBP is used as a prior in linear-Gaussian binary latent feature model.
 
 
-\section{Algorithm}
-
+\section{Implementation}
+\subsection{Infinite Latent Features Model and Algorithm}
 \begin{itemize}
 \item{Gamma prior for $\alpha$
 $$
@@ -88,14 +88,18 @@ Where AR is the acceptance ratio. We use similar algorithm to sample $\sigma_A$}
 
 \end{itemize}
 
+\subsection{Simulated Data}
 
 
-\section{Profiling}
-We profiled the code using \textit{cProfile} to figure out the bottleneck. The result is shown in \textit{profiler.txt}. We see that most of the computational time is spent on calculating the \textit{log likelihood(ll)}  and matrix inversion. Due to this fact, one of the first things we looked at were ways to reduce computation time for likelihood and/or inverse calculation.\\
+\subsection{Unit Testing}
+
+
+\section{Profiling and Optimization}
+We profiled the code using \textit{cProfile} to figure out bottlenecks. The result is shown in \textit{Profiling result}. We see that most of the computational time is spent on calculating the \textit{log likelihood(ll)}  and matrix inversion. Due to this fact, one of the first things we looked at were ways to reduce computation time for likelihood and/or inverse calculation.\\
 
 \VerbatimInput{profiler.txt}
 
-\subsection{Improved matrix Inversion}
+\subsection{Matrix Inversion}
 We tried the matrix inversion method described in Griffiths and Ghahramani(2005, eq 51-54), where the method reduces the runtime by allowing us to perform rank one updates instead when only one value is changed. We implemented the algorithm and were able to speed up the process as shown in Table \ref{compareInverse}.
 
 \begin{table}[ht]
@@ -104,17 +108,31 @@ We tried the matrix inversion method described in Griffiths and Ghahramani(2005,
 \input{latex_tables/inverseMethods}
 \end{table}
 
-Even though we were able to improve the performance, due to some numerical errors, we were not able to obtain a stationary MCMC chain using this method. This could be achieved by spending some more time on it but due to lack of time, we had to abandon this method and move on.
+Even though we were able to improve the performance, due to some numerical errors, we were not able to obtain a stationary MCMC chain using this method. This could be achieved by spending some more time on it but due to time constraints we decided that to look at fixing this at a later time.\\
 
-\subsection{Improved likelihood function}
+\subsection{Likelihood function}
+While working on the optimized matrix inversion, we noticed that the matrix that we're inverting i.e. ($Z^TZ+\frac{\sigma_X^2}{\sigma_A^2}I$) actually appears twice inside the likelihood function. So, we looked at removing the redundancy by calculating the matrix and storing it. We were able to gain some improvement using this method as shown in Table \ref{llcomp} and Table \ref{runtimes}. Since the likelihood function is called numerous times, even the small gain shwon in Table \ref{llcomp} was translated into a substantial gain as shown in Table \ref{runtimes}.\\
 
+
+\begin{table}[H]
+\centering
+\caption{Runtime Comparision \label{llcomp}}
+\input{latex_tables/llcomp}
+
+\end{table}
+
+\subsection{Cython}
+Another way we looked at improving the performance of the code was by cythonizing the code. We again looked at improving the performance of the likelihood function by cythonizing it. As shwon in Table \ref{runtimes}, we were not able to gain substantial improvements from it.\\
+
+
+\subsection{Parallelization and CUDA}
+Since our algorithm is an MCMC algorithm with serial dependence, parallelization does not seem to be a good idea. One of the ways, parallelization can be done is by splitting the chain into multiple smaller chains and combining them back. We tested it and it showed some improvement in the code but decided against using it as the gain wasn't significant enough as we had to take care of multiple burn-in periods and ignore the loss of markov property due to multiple chains. Also, parallelizing the density calculation for likelihood wasn't an option for our algorithm as we had a discrete density with just two points.
 
 
 \begin{table}[ht]
 \centering
 \caption{Runtime Comparision \label{runtimes}}
 \input{latex_tables/Runtimes}
-
 \end{table}
 
 
@@ -147,9 +165,8 @@ Even though we were able to improve the performance, due to some numerical error
 
 \begin{table}[ht]
 \centering
-\caption{Runtime Comparision \label{runtimes}}
-\input{latex_tables/featuresDetected}
-
+\caption{Features present in first four original images \label{features}}
+\input{latex_tables/featuresPresent}
 \end{table}
 
 

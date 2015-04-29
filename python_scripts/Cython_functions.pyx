@@ -1,5 +1,8 @@
 import numpy as np
+cimport cython
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def ll(X, Z, sigmaX, sigmaA, K, D, N):
     #M = Z[:,0:K].T.dot(Z[:,0:K])+sigmaX**2/sigmaA**2*np.identity(K)
     M = Z.T.dot(Z)+(sigmaX**2/sigmaA**2)*np.identity(K)

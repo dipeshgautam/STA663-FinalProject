@@ -102,6 +102,6 @@ df = pd.DataFrame(np.hstack((np.vstack([Z0[0,0],Z0[1,0],Z0[2,0],Z0[3,0]]),np.vst
                              ,np.vstack([Z0[0,2],Z0[1,2],Z0[2,2],Z0[3,2]]),np.vstack([Z0[0,3],Z0[1,3],Z0[2,3],Z0[3,3]]))) \
                   ,index=index,columns=columns)
 tab = df.to_latex()
-text_file = open("latex_tables/featuresDetected.tex", "w")
+text_file = open("latex_tables/featuresPresent.tex", "w")
 text_file.write(tab)
 text_file.close()

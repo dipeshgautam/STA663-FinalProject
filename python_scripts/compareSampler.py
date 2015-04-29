@@ -7,6 +7,7 @@ import pandas as pd
 import time
 import os
 
+np.random.seed(1)
 X=np.load('Data/SimulatedData.npy')
 N=X.shape[0]
 D=X.shape[1]

@@ -2,6 +2,7 @@ from sampler import sampler
 import numpy as np
 import time
 import os
+np.randdom.seed(1)
 
 X=np.load('Data/SimulatedData.npy')
 N=X.shape[0]

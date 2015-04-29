@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from functions import calcInverse, sampleIBP
 import os
+np.random.seed(1)
 
 X=np.load('Data/SimulatedData.npy')
 N=X.shape[0]
