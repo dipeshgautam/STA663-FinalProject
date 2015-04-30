@@ -4,6 +4,8 @@ import time
 import os
 np.random.seed(1)
 
+
+#Run the simulation with the best code
 X=np.load('Data/SimulatedData.npy')
 N=X.shape[0]
 D=X.shape[1]

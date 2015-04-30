@@ -11,6 +11,12 @@ Thomas Griffiths and Zoubin Ghahramani.
   technical report 2005-001.
 \newblock 2005.
 
+\bibitem{occam}
+Carl~Edward Rasmussen and Zoubin Ghahramani.
+\newblock Occam's razor.
+\newblock {\em Advances in neural information processing systems}, pages
+  294--300, 2001.
+
 \bibitem{yildirimweb}
 Ilker Yildirim.
 \newblock http://www.mit.edu/~ilkery/.

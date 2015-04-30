@@ -1,7 +1,6 @@
-#from __future__ import division
-#np.random.seed(1)
 #Sample prior
 def sampleIBP(alpha, N):
+    """IBP sampler given alpha and N, returns the Z feature inclusion matrix"""
     import numpy as np
     import math
     np.random.seed(1)
@@ -24,6 +23,7 @@ def sampleIBP(alpha, N):
 
 #Rank one update inverse calculation
 def calcInverse(Z,M,i,k,val):
+    """Rank one update inverse calculation as described in Griffiths and Ghahramani(2005)"""
     import numpy as np
     import math
     M_i = M - M.dot(Z[i,:].T.dot(Z[i,:].dot(M)))/(Z[i,:].dot(M.dot(Z[i,:].T))-1)
@@ -34,6 +34,7 @@ def calcInverse(Z,M,i,k,val):
 
 #Original likelihood function
 def ll0(X, Z, sigmaX, sigmaA, K, D, N):
+    """Calculate the log likelihood of X given the parameters"""
     import numpy as np
     import math
     return (-1)*np.log(2*np.pi)*N*D*.5 - np.log(sigmaX)*(N-K)*D - np.log(sigmaA)*K*D \
@@ -43,6 +44,7 @@ def ll0(X, Z, sigmaX, sigmaA, K, D, N):
 
 #Improved Likelihood function
 def ll(X, Z, sigmaX, sigmaA, K, D, N):
+    """Improved log likelihood calculation for X"""
     import numpy as np
     import math
     M = Z.T.dot(Z)+(sigmaX**2/sigmaA**2)*np.identity(K)

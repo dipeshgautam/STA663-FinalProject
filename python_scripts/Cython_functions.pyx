@@ -4,13 +4,14 @@ cimport cython
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def ll(X, Z, sigmaX, sigmaA, K, D, N):
-    #M = Z[:,0:K].T.dot(Z[:,0:K])+sigmaX**2/sigmaA**2*np.identity(K)
+    """Calculate the log likelihood of X given the parameters"""
     M = Z.T.dot(Z)+(sigmaX**2/sigmaA**2)*np.identity(K)
     return (-1)*np.log(2*np.pi)*N*D*.5 - np.log(sigmaX)*(N-K)*D - np.log(sigmaA)*K*D - .5*D*np.log(np.linalg.det(M)) \
         -.5/(sigmaX**2)*np.trace( (X.T.dot( np.identity(N)-Z.dot(np.linalg.inv(M).dot(Z.T)) )).dot(X) )
 
 np.random.seed(1)
 def sampleIBP(alpha, N):
+    """IBP sampler given alpha and N, returns the Z feature inclusion matrix"""
     result = np.zeros((N, 1000))
     t = np.random.poisson(alpha)
     if t>0:

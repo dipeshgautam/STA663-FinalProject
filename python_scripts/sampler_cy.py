@@ -4,13 +4,17 @@ import math
 import Cython_functions as func
 
 def sampler_cy(X, niter, BURN_IN, sigmaX, sigmaA,alpha, N, D, maxNew):
+    """Implementation of MCMC which includes Gibbs sampling as well as MH steps."""
     HN = 0.
     for i in range(1,N+1):
         HN += 1./i
 
     SampleSize=niter-BurnIn
-
+    
+    #Even though we can have infinite features, for this problem, for efficiency in storing, set it to 20 as we never get ther
     K_inf=20
+    
+    #initialize matrices to store the samples
 
     chainZ=np.zeros((SampleSize,N,K_inf))
     chainK=np.zeros((SampleSize,1))
@@ -73,11 +77,12 @@ def sampler_cy(X, niter, BURN_IN, sigmaX, sigmaA,alpha, N, D, maxNew):
                     addCols[i,:] = 1
                     Z_temp = np.hstack((Z_temp, addCols))
 
+                #Calculate the probability of kNew new features for object i
                 pois = kNew*np.log(alphaN) - alphaN - np.log(math.factorial(kNew))
                 lik = func.ll(X = X, Z = Z_temp, sigmaX = sigmaX, sigmaA = sigmaA, K=(Kplus+kNew), D= D, N= N)
                 prob[kNew] = pois + lik
 
-            #normalize prob
+            #normalize prob and select the most likely number of new features
             prob = np.exp(prob - max(prob))
             prob = prob/sum(prob)
 

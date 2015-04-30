@@ -28,6 +28,8 @@ X0 = np.load("Data/SimulatedData.npy")
 Z0 = np.load("Data/ZOriginal.npy")
 A0 = np.load("Data/AOriginal.npy")
 
+
+#plot the distribution of Kplus and also the mean number of features for objects
 plt.figure(num=None, figsize=(12,3), dpi=80, facecolor='w', edgecolor='k')
 plt.subplot(121)
 plt.xlabel(r'(a) $K_+$')
@@ -39,6 +41,9 @@ plt.savefig('figures/kDistribution.png')
 
 Z=Z[:,0:4]
 
+
+
+#plot the original features and also the simulated objects and their corresponding feature identification vector
 
 def make_ticklabels_invisible(fig):
     for i, ax in enumerate(fig.axes):
@@ -75,10 +80,13 @@ plt.pcolormesh(X0[3,:].reshape(6,6),cmap=plt.cm.gray)
 make_ticklabels_invisible(f)
 plt.savefig('figures/Original.png')
 
+#Calculate the posterior mean of feature weights
 sigmaA=np.mean(chainSigmaA)
 sigmaX=np.mean(chainSigmaX)
 A_post=np.dot(np.dot(np.linalg.inv((np.dot(Z.T,Z)+(sigmaX**2/sigmaA**2)*np.eye(4))),Z.T),X0)
 
+
+#predict the objects using posterior mean of weights and detected features
 N=X0.shape[0]
 D =X0.shape[1] 
 Xpost=np.zeros((N,D))
@@ -86,7 +94,9 @@ for i in range(N):
     Xpost[i,:]=np.dot(Z[i,:],A_post[0:4,])
 
 
+
     
+#plot the detected features and the recreated objects and corresponding feature identification vectors.
 f=plt.figure(num=None, figsize=(12,6), dpi=80, facecolor='w', edgecolor='k')
 
 plt.subplot2grid((13,24),(0,0), colspan=6, rowspan=6)
@@ -118,6 +128,7 @@ make_ticklabels_invisible(f)
 plt.savefig('figures/Detected.png')
 
 
+#Trace plots for sigmaA, sigmaX and alpha
 plt.figure(num=None, figsize = (12,6), dpi=80, facecolor='w', edgecolor='k')
 plt.subplot(311)
 plt.plot(chainSigmaX)

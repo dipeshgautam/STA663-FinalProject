@@ -1,3 +1,4 @@
+#compare the performance of likelihood functions
 from functions import sampleIBP, ll, ll0
 import pandas as pd
 import numpy as np
@@ -14,6 +15,8 @@ alpha=1.
 
 Z,K = sampleIBP(alpha,N)
 
+
+#time the original likelihood function
 loops = 1000
 tll0=np.zeros(loops)
 for l in range(loops):
@@ -24,6 +27,7 @@ for l in range(loops):
 mtll0= round(np.mean(tll0),7)
 
 
+# time the revised likelihood function
 tll=np.zeros(loops)
 for l in range(loops):
     t0=time.time()
@@ -35,6 +39,8 @@ mtll= round(np.mean(tll),7)
 
 times = np.array((mtll0,mtll))
 
+
+#store results as latex table to be used later
 columns = ['Time']
 index = ['original ll function','Proposed ll function']
 

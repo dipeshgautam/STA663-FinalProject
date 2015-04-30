@@ -5,15 +5,20 @@ from functions import sampleIBP
 from functions import ll0 as ll
 
 def sampler0(X, niter, BurnIn, sigmaX, sigmaA,alpha, N, D, maxNew):
+    """Implementation of MCMC which includes Gibbs sampling as well as MH steps."""
     np.random.seed(1)
+    
+    #Calculate the nth harmonic number
     HN = 0.
     for i in range(1,N+1):
         HN += 1./i
 
-    SampleSize=niter-BurnIn
+    SampleSize=niter-BurnIn ##effective sample size
 
-    K_inf=20
-
+    K_inf=20 #Even though we can have infinite features, for this problem, for efficiency in storing, set it to 20 as we never get ther
+    
+    
+    #initialize matrices to store the samples
     chainZ=np.zeros((SampleSize,N,K_inf))
     chainK=np.zeros((SampleSize,1))
     chainSigmaX=np.zeros((SampleSize,1))
@@ -71,12 +76,12 @@ def sampler0(X, niter, BurnIn, sigmaX, sigmaA,alpha, N, D, maxNew):
                     addCols = np.zeros((N,kNew))
                     addCols[i,:] = 1
                     Z_temp = np.hstack((Z_temp, addCols))
-
+                #Calculate the probability of kNew new features for object i
                 pois = kNew*np.log(alphaN) - alphaN - np.log(math.factorial(kNew))
                 lik = ll(X = X, Z = Z_temp, sigmaX = sigmaX, sigmaA = sigmaA, K=(Kplus+kNew), D= D, N= N)
                 prob[kNew] = pois + lik
 
-            #normalize prob
+            #normalize prob and select the most likely number of new features
             prob = np.exp(prob - max(prob))
             prob = prob/sum(prob)
 

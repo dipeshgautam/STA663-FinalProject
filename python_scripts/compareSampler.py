@@ -7,6 +7,7 @@ import pandas as pd
 import time
 import os
 
+#set initial values
 np.random.seed(1)
 X=np.load('Data/SimulatedData.npy')
 N=X.shape[0]
@@ -18,21 +19,27 @@ maxNew=4
 niter=1000
 BurnIn = 0
 
+
+#time the original code
 t0= time.time()
 sampler0(X, niter,BurnIn, sigmaX, sigmaA, alpha, N, D, maxNew)
 t1=time.time()
 elap1 = t1-t0
 
+#time code optimized code
 t0= time.time()
 sampler(X, niter, BurnIn, sigmaX, sigmaA,alpha, N, D, maxNew)
 t1=time.time()
 elap2 = t1-t0
 
+#time cythonized version of optimized code
 t0= time.time()
 sampler(X, niter, BurnIn, sigmaX, sigmaA,alpha, N, D, maxNew)
 t1=time.time()
 elap3 = t1-t0
 
+
+#save result to latex table to be used in report
 
 columns = ['Total Time']
 index = ['Initial Code','Improved ll','Cythonized']

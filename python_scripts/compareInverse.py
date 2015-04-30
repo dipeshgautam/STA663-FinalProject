@@ -12,6 +12,8 @@ sigmaX=1.
 sigmaA=1.
 alpha=1.
 
+
+#calculate and time the inversion method described by Griffiths and Ghahramani(2005)
 i=10
 k=3
 
@@ -30,6 +32,8 @@ for l in range(loops):
 mtcalcInv= round(np.mean(tcalcInv),7)
 
 
+
+#time np.linalg.inv
 tlinalgInv=np.zeros(loops)
 for l in range(loops):
     t0=time.time()
@@ -41,6 +45,8 @@ mtlinalgInv= round(np.mean(tlinalgInv),7)
 
 times = np.array((mtlinalgInv,mtcalcInv))
 
+
+#save result to latex table to be used in report
 columns = ['Time']
 index = ['linalg.inverse','calcInverse']
 
