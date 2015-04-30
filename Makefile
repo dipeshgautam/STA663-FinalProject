@@ -15,16 +15,17 @@ latex_tables/Runtimes.tex: python_scripts/compareSampler.py Data/SimulatedData.n
 
 latex_tables/llcomp.tex: Data/SimulatedData.npy python_scripts/likelihoodcompare.py
 	python python_scripts/likelihoodcompare.py
-
+    
 Data/chainZ.npy Data/chainK.npy Data/chainSigmaX.npy Data/chainSigmaA.npy Data/chainAlpha.npy: Data/SimulatedData.npy python_scripts/finalsimulation.py
 	python python_scripts/finalsimulation.py
     
 
-Cython_functions.so:
+python_scripts/Cython_functions.so:
 	cd python_scripts ; python Cython_setup.py build_ext --inplace; cd ..
 
 Data/SimulatedData.npy Data/ZOriginal.npy Data/AOriginal.npy: python_scripts/GenerateData.py
 	python python_scripts/GenerateData.py
     
-    
+.PHONY: all
+
 all: Report.pdf

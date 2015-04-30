@@ -33,7 +33,7 @@
 
 
 \section{Introduction}
-Modeling objects is an interesting problem and one of the ways to do it is through unsupervised learning. The goal of unsupervised learning is to identify the underlying features that make up the object. Simplest way is to classify the objects into different subsets based on these features. It works well when the objects can be grouped into reasonable number of small groups~\cite{griffiths}. When we cannot easily classify them into similar groups due to large range of features or when the objects might be better represented on their own with set of features that they have. For example, it might be more useful to describe a country as from Asia, predominantly Buddhist, tropical climate and low GDP instead of trying to classify it into some subset of countries~\cite{griffiths1}. When taking this approach, we need to consider the total features needed to represent the object. This is often treated as a model selection problem and some dimensionality is chosen based upon some measures~\cite{griffiths}. An alternative used in nonparametric Bayesian models is to keep the dimensionality unbounded~\cite{occam}. Chinese Restaurant Process uses this method and assigns objects to classes from infinite choice. Indian Buffet Process extends this and instead of restricting objects to classes, assigns a subset of infinite features to the objects.
+Modeling objects is an interesting problem and one of the methods is unsupervised learning. The goal of unsupervised learning is to identify the underlying features that make up the object. Simplest way is to classify the objects into different subsets based on these features. It works well when the objects can be grouped into reasonable number of small groups~\cite{griffiths}. When we cannot easily classify them into similar groups due to large range of features or when the objects might be better represented on their own with set of features that they have. For example, it might be more useful to describe a country as from Asia, predominantly Buddhist, tropical climate and low GDP instead of trying to classify it into some subset of countries~\cite{griffiths1}. When taking this approach, we need to consider the total features needed to represent the object. This is often treated as a model selection problem and some dimensionality is chosen based upon some measures~\cite{griffiths}. An alternative used in nonparametric Bayesian models is to keep the dimensionality unbounded~\cite{occam}. Chinese Restaurant Process uses unbounded dimensionality of classes and assigns objects to classes from infinite choice. Indian Buffet Process extends this to have unbounded dimensionality of latent features and assigns a subset of infinite features to the objects.
 
 
 \subsection{Indian Buffet Process (IBP)}
@@ -67,7 +67,7 @@ We used the linear-gaussian feature model as derived in Griffiths and Ghahramani
 \[
 x_i \sim Normal(z_iA, \Sigma_X)
 \]
-Where A is $KXD$ matrix of weight representing the $K$ latent features and $\Sigma_X= \sigma^2_xI$ is the covariance matrix that introduces white noise to the images. The weight matrix $A$ itself has a prior with mean 0, and covariance $\sigma^2_AI$. Thus, the likelihood is given for the data is given by:
+Where A is $KXD$ matrix of weight representing the $K$ latent features and $\Sigma_X= \sigma^2_XI$ is the covariance matrix that introduces white noise to the images. The weight matrix $A$ itself has a prior with mean 0, and covariance $\sigma^2_AI$. Thus, the likelihood is given for the data is given by:
 \begin{multline}\label{eq:lik}
 P(X|Z,\sigma_X, \sigma_A) = \frac{1}{(2 \pi)^{ND/2} (\sigma_X)^{(N-K)D}(\sigma_A)^{KD}(|Z^TZ+\frac{\sigma_X^2}{\sigma_A^2}I|)^{D/2}}\\
 exp\{-\frac{1}{2\sigma_X^2}tr(X^T(I-Z(Z^TZ+\frac{\sigma_X^2}{\sigma_A^2}I)^{-1}Z^T)X)\}
@@ -184,7 +184,7 @@ Another way we looked at improving the performance of the code was by cythonizin
 \subsection{Parallelization and CUDA}
 Since our algorithm is an MCMC algorithm with serial dependence, parallelization does not seem to be a good idea. One of the ways, parallelization can be done is by splitting the chain into multiple smaller chains and combining them back. We tested it and it showed some improvement in the code but decided against using it as the gain wasn't significant enough when we considered multiple burn-in periods and the loss of markov property due to multiple chains. Also, parallelizing the density calculation for likelihood wasn't useful for our algorithm as we had a discrete density with just two points.
 
-We also looked at optimizing the code through using CuBLAS library from CUDA. We tested the performance of matrix multiplication using \textit{np.dot} and \textit{cublas.Blas} using a GPU instance from AWS and found the CuBLAS multiplication to be slower. This can be attributed to the fact that we are working with relatively small matrices of dimensions like $KXK$, $100XK$ where K is smaller than 10 and  $100X36$. So, the overhead was larger than the gain from gpu calculation resulting in slower time for CuBLAS matrix multiplication.
+We also looked at optimizing the code through using CuBLAS library from CUDA. While profiling we saw that matrix multiplication \textit{np.dot} was one of the most called and time consuming calls. We tested the performance of matrix multiplication using \textit{np.dot} and \textit{cublas.Blas} using a GPU instance from AWS and found the CuBLAS multiplication to be slower. This can be attributed to the fact that we are working with relatively small matrices of dimensions like $KXK$, $100XK$ where K is smaller than 10 and  $100X36$. So, the overhead was larger than the gain from gpu calculation resulting in slower time for CuBLAS matrix multiplication.
 
 
 \section{Unit Testing}
@@ -211,14 +211,11 @@ The basis image and first four simulated images are shown in Fig. \ref{fig:origi
 We ran our sampler with the improved likelihood calculation for 1000 iterations. Our data was simulated with 4 latent features. The distribution of $K_+$(total features detected at each iteration) is shown in Fig. \ref{fig:dist}(a). Although we see that the mode of the number of features is 5, with significant iterations where the number of features is 6 or even 7, we can see from Fig. \ref{fig:dist}(b) that most of the objects actually had between 1 and 4 features with very few of them with 5 or more features. These outliers can be attributed to the noise and variance in the data simulation and ignored. So, we can conclude that the algorithm correctly predicts and detects the existence of 4 latent features in the simulated data.\\
 Trace plots for $\sigma_X$, $\sigma_A$, and $\alpha$ are shown in Fig. \ref{fig:trace}. We see that $\sigma_X$ is converging to it's true value of $0.5$ and the other parameters also show proper convergence validating the authenticity of the algorithm.\\ 
 \begin{figure}[ht]
-\caption {Distribution of Kplus and mean number of features per object}
 \includegraphics[width=\linewidth]{figures/kDistribution.png}
+\caption {Distribution of Kplus and mean number of features per object}
 \label{fig:dist}
-\end{figure}
-
-\begin{figure}[ht]
-\caption {Traceplots for $\sigma_X$, $\sigma_A$ and $\alpha$}
 \includegraphics[width=\linewidth]{figures/Trace.png}
+\caption {Traceplots for $\sigma_X$, $\sigma_A$ and $\alpha$}
 \label{fig:trace}
 \end{figure}
 
@@ -253,9 +250,9 @@ We used zero variance to ignore the white noise in the recreated images. The res
 We compared our algorithm with an implementation of the algorithm in a different language. We also contrast IBP with similar algorithm that addresses the same problem i.e. Chinese Restaurant Process.
 \subsection{Comparision with MATLAB implementation of the same algorithm}
 We compared our code with the MATLAB code written by Yildirim~\cite{yildirimweb} and provided on his website. We ran the MATLAB profiler on the code and part of the result is shown in Fig. \ref{fig:profilematlab}. We see that we achieved similar runtime compared to the MATLAB code. Our code turned out to be slightly faster across different runs. Also, our results were consistent with those obtained from the MATLAB code we were comparing against.
-\begin{figure}[ht]
-\caption{Result of MATLAB profiler}
+\begin{figure}[H]
 \includegraphics[width=\linewidth]{MatlabProfile.PNG}
+\caption{Result of MATLAB profiler}
 \label{fig:profilematlab}
 \end{figure}
 
