@@ -136,7 +136,7 @@ We profiled the code using \textit{cProfile} to figure out bottlenecks. The resu
 \VerbatimInput{profiler.txt}
 
 \subsection{Matrix Inversion}
-We tried the matrix inversion method described in Griffiths and Ghahramani(2005, eq 51-54) ~\cite{griffiths1}, where the method reduces the runtime by allowing us to perform rank one updates instead of full rank updates when only one value is changed. We implemented the algorithm and were able to speed up the process as shown in Table \ref{compareInverse}.
+In the likelihood function, we need to perform the matrix inversion ot ($Z^TZ+\frac{\sigma_X^2}{\sigma_A^2}I$) every time. We saw from profiling that this was one of slower processes. A matrix inversion method has been described by Griffiths and Ghahramani(2005)~\cite{griffiths1} eq. 51-54, where the method reduces the runtime by allowing us to perform rank one updates instead of full rank updates when only one value is changed. We implemented the algorithm and were able to speed up the process as shown in Table \ref{compareInverse}.
 
 \begin{table}[ht]
 \centering
@@ -144,10 +144,10 @@ We tried the matrix inversion method described in Griffiths and Ghahramani(2005,
 \input{latex_tables/inverseMethods}
 \end{table}
 
-Even though we were able to improve the performance, due to some numerical errors, we were not able to obtain a stationary MCMC chain using this method. This could be achieved by spending some more time on it but due to time constraints we decided that to look at fixing this at a later time.\\
+Even though we were able to improve the performance, due to some numerical errors, we were not able to obtain a stationary MCMC chain using this method. This could be achieved by spending some more time on it. Due to time constraints, we decided to look into fixing this at a later time.\\
 
 \subsection{Likelihood function}
-While working on the optimized matrix inversion, we noticed that the matrix that we're inverting i.e. ($Z^TZ+\frac{\sigma_X^2}{\sigma_A^2}I$) actually appears twice inside the likelihood function. So, we looked at removing the redundancy by calculating the matrix and storing it. We were able to gain some improvement using this method as shown in Table \ref{llcomp} and Table \ref{runtimes}. Since the likelihood function is called numerous times, even the small gain shwon in Table \ref{llcomp} was translated into a substantial gain as shown in Table \ref{runtimes}.\\
+While working on the optimized matrix inversion, we noticed that the matrix that we're inverting i.e. ($Z^TZ+\frac{\sigma_X^2}{\sigma_A^2}I$) actually appears twice inside the likelihood function. So, we looked at removing the redundancy by calculating the matrix and storing it. We were able to gain some improvement using this method as shown in Table \ref{llcomp} and Table \ref{runtimes}. Since the likelihood function is called numerous times, even the small gain shown in Table \ref{llcomp} translated into a substantial gain as shown in Table \ref{runtimes}.\\
 
 
 \begin{table}[ht]
@@ -167,9 +167,9 @@ Another way we looked at improving the performance of the code was by cythonizin
 \end{table}
 
 \subsection{Parallelization and CUDA}
-Since our algorithm is an MCMC algorithm with serial dependence, parallelization does not seem to be a good idea. One of the ways, parallelization can be done is by splitting the chain into multiple smaller chains and combining them back. We tested it and it showed some improvement in the code but decided against using it as the gain wasn't significant enough as we had to take care of multiple burn-in periods and ignore the loss of markov property due to multiple chains. Also, parallelizing the density calculation for likelihood wasn't an option for our algorithm as we had a discrete density with just two points.
+Since our algorithm is an MCMC algorithm with serial dependence, parallelization does not seem to be a good idea. One of the ways, parallelization can be done is by splitting the chain into multiple smaller chains and combining them back. We tested it and it showed some improvement in the code but decided against using it as the gain wasn't significant enough when we considered multiple burn-in periods and the loss of markov property due to multiple chains. Also, parallelizing the density calculation for likelihood wasn't useful for our algorithm as we had a discrete density with just two points.
 
-
+We also looked at optimizing the code through using CuBLAS library from CUDA. We tested the performance of matrix multiplication using \textit{np.dot} and \textit{cublas.Blas} using a GPU instance from AWS and found the CuBLAS multiplication to be slower. This can be attributed to the fact that we are working with relatively small matrices of dimensions like $KXK$, $100XK$ where K is smaller than 10 and  $100X36$. So, the overhead was larger than the gain from gpu calculation resulting in slower time for CuBLAS matrix multiplication.
 
 
 \section{Unit Testing}
@@ -178,23 +178,23 @@ To test the validity of the code and functions we performed the following tests.
 \begin{itemize}
 \item{test that calcInverse(function for speedy calculation of inverse) gives results numerically close to np.linalg.inv}
 \item{Test that the likelihood is positive.}
-\item{Make sure that likelihood function gives error when $\sigma_A$ and $\sigma_X$ are non-negative}
+\item{Make sure that likelihood function gives error when $\sigma_A$ and $\sigma_X$ are non-positive}
 \item{Test for convergence of the $\sigma_X$ to the true value of 0.5}
 \item{Make sure that the all the recreated objects have at least one feature as we made that assertion while simulating data}
 \end{itemize}
 
 \section{Application and Results}
 \subsection{Simulated Data}
-We used simulated data similar to Griffiths and Ghahramani(2005)~cite{griffiths} and Yildirim (2012)~cite{yildirim}. The data set consists of 100($N$) images $X$, where each image $x_i$ a vector of length 36($D$) representing the $6X6$ dimension of each object. These images were created using 4($K$) latent features (base images) which correspond to the rows of the weight matrix $A$. Each object has .5 probability for presence of each feature. Then the object was created by adding white noise corresponding to $\sigma_X^2=0.5$ as:
+We used simulated data similar to Griffiths and Ghahramani(2005)~\cite{griffiths} and Yildirim (2012)~\cite{yildirim}. The data set consists of 100($N$) objects $X$, where each object $x_i$ is a vector of length 36($D$) representing the $6X6$ dimension of each object(image). These images were created using 4($K$) latent features (base images) which correspond to the rows of the weight matrix $A$. Each object has .5 probability for presence of each feature. Then the object was created by adding white noise corresponding to $\sigma_X^2=0.5$ as:
 \[
 x_i \sim Normal(z_iA, \sigma_X^2I)
 \]
-The basis image and first four simulated images are shown in Fig. \ref{fig:original}, where the top row are the features, bottom row are the first four objects and the middle row represents presence or absence of each of the four features.\\
+The basis image and first four simulated images are shown in Fig. \ref{fig:original}, where the top row shows the features, bottom row shows the first four objects and the middle row represents presence or absence of each of the four features for the corresponding object below.\\
 
 \subsection{Results}
 \subsubsection{Validation and $K_+$}
-We ran our sampler with the improved likelihood calculation for 1000 iterations. Our data was simulated with 4 latent features. The distribution of $K_+$(total features detected at each iteration) is shown in Fig. \ref{fig:dist}(a). Although we see that the mode of the number of features is 5, with significant iterations where the number of features is 7, we can see from Fig. \ref{fig:dist}(b) that most of the objects actually had between 1 and 4 features with very few of them with 5 or more features. These outliers can be attributed to the noise and variance in the data simulation and ignored. So, we can conclude that the algorithm correctly predicts and detects the existence of 4 latent features in the simulated data.\\
-Trace plot for $\sigma_X$, $\sigma_A$, and $\alpha$ is shown in Fig. \ref{fig:trace}. We see that $\sigma_X$ is converging to it's true value of $0.5$ and the other parameters also show proper convergence validating the authenticity of the algorithm.\\ 
+We ran our sampler with the improved likelihood calculation for 1000 iterations. Our data was simulated with 4 latent features. The distribution of $K_+$(total features detected at each iteration) is shown in Fig. \ref{fig:dist}(a). Although we see that the mode of the number of features is 5, with significant iterations where the number of features is 6 or even 7, we can see from Fig. \ref{fig:dist}(b) that most of the objects actually had between 1 and 4 features with very few of them with 5 or more features. These outliers can be attributed to the noise and variance in the data simulation and ignored. So, we can conclude that the algorithm correctly predicts and detects the existence of 4 latent features in the simulated data.\\
+Trace plots for $\sigma_X$, $\sigma_A$, and $\alpha$ are shown in Fig. \ref{fig:trace}. We see that $\sigma_X$ is converging to it's true value of $0.5$ and the other parameters also show proper convergence validating the authenticity of the algorithm.\\ 
 \begin{figure}[ht]
 \caption {Distribution of Kplus and mean number of features per object}
 \includegraphics[width=\linewidth]{figures/kDistribution.png}
@@ -212,10 +212,11 @@ Posterior estimation of $A$ is given by:
 \[
 E[A|X,Z] = (Z^TZ+\frac{\sigma_X^2}{\sigma_A^2}I)^{-1}Z^TX
 \]
-as givin in Griffiths and Ghahramani(2005) eq.59. For this calculation, we used the final Z obtained from the MC using only the first four columns corresponding to the four detected features. Likewise, posterior mean of $\sigma_X$ and $\sigma_A$ was used in the calculation of posterior expectation of weight matrix A.\\
+as given in Griffiths and Ghahramani(2005)~\cite{griffiths1} eq.59. For this calculation, we used the final Z obtained from the MC with only the first four columns corresponding to the four detected features. Likewise, posterior means of $\sigma_X$ and $\sigma_A$ were used in the calculation of posterior estimation of weight matrix A.\\
+
 With this information and the posterior Z, we were able to recreate the objects X as:
 \[
-Xi \sim Normal(ZiA,0)
+x_i \sim Normal(z_iA,0)
 \]
 We used zero variance to ignore the white noise in the recreated images. The results are shown in Fig. \ref{fig:detected}. By comparing with the original features and simulated objects as given in Fig. \ref{fig:original} with the detected features and recreated objects as given in Fig. \ref{fig:detected}, we can conclude that the algorithm was successfull in identifying all the latent features and successfully detecting the presense or absence of those features in the simulated objects which had white noise making detection difficult.
 
@@ -235,7 +236,7 @@ We used zero variance to ignore the white noise in the recreated images. The res
 \end{figure}
 
 \section{Comparision}
-We compared our algorithm with an implementation of the algorithm in a different language. We calso contrast IBP with similar algorithm that adderesses the same problem i.e. Chinese Restaurant Process.
+We compared our algorithm with an implementation of the algorithm in a different language. We also contrast IBP with similar algorithm that addresses the same problem i.e. Chinese Restaurant Process.
 \subsection{Comparision with MATLAB implementation of the same algorithm}
 We compared our code with the MATLAB code written by Yildirim~\cite{yildirimweb} and provided on his website. We ran the MATLAB profiler on the code and part of the result is shown in Fig. \ref{fig:profilematlab}. We see that we achieved similar runtime compared to the MATLAB code. Our code turned out to be slightly faster across different runs. Also, our results were consistent with those obtained from the MATLAB code we were comparing against.
 \begin{figure}
