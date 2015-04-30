@@ -16,7 +16,7 @@ sigmaA=1.
 alpha=1.
 maxNew=4
 niter=1000
-BurnIn = 200
+BurnIn = 0
 
 t0= time.time()
 sampler0(X, niter,BurnIn, sigmaX, sigmaA, alpha, N, D, maxNew)

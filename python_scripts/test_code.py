@@ -27,10 +27,6 @@ for i in range(N):
 
 Z = Z[:,0:Kplus]
 M=np.linalg.inv(np.dot(Z.T,Z)+((sigmaX/sigmaA)**2)*np.identity(Kplus))
-def test1():
-    M1=np.linalg.inv(np.dot(Z.T,Z)+((sigmaX/sigmaA)**2)*np.identity(Kplus))
-    M2=np.dot(Z.T,Z)+((sigmaX/sigmaA)**2)*np.identity(Kplus)
-    npt.assert_almost_equal(np.dot(M1,M2),np.identity(Kplus))
 
 #test of calcinverse
 def testcalcInverse():
@@ -51,8 +47,10 @@ def testll2():
 def testll3():
     assert math.isnan(ll(X, Z, sigmaX, -.5, Kplus, D, N))==True
 
+#Make sure likelihood gives nan if sigmaX is negative
 def testll4():
     assert math.isnan(ll(X, Z, -0.5, sigmaA, Kplus, D, N))==True    
+
 #test of convergence of code
 def testconv1():
     assert (np.abs(np.mean(chainSigmaX[200:])-0.5))<=.05
