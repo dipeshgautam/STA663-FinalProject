@@ -1,5 +1,6 @@
-Report.pdf: Report.tex profiler.txt latex_tables/Runtimes.tex latex_tables/inverseMethods.tex figures/Original.png figures/Detected.png figures/kDistribution.png figures/Trace.png latex_tables/llcomp.tex
+Report.pdf: Report.tex profiler.txt latex_tables/Runtimes.tex latex_tables/inverseMethods.tex figures/Original.png figures/Detected.png figures/kDistribution.png figures/Trace.png latex_tables/llcomp.tex MatlabProfile.PNG
 	pdflatex Report
+	bibtex Report    
 	pdflatex Report
 	pdflatex Report
 

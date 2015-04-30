@@ -30,6 +30,8 @@
 \date{\today}
 \maketitle
 
+
+
 \section{Background}
 \subsection{Indian Buffet Process (IBP)}
 The Indian Buffet is an adaptation of Chinese Buffett Process where each object instead of being associated with a single latent class can  be associated with multiple classes. This is particularly useful when each object has multile latent features and by associating objects with a single class we cannot partition them into homogeneous subsets.
@@ -43,10 +45,10 @@ then tries a Poisson($\frac{\alpha}{i}$) number of new dishes. Which costumer ch
 
 
 \section{Implementation}
-IBP can be used as a prior in models for unsupervised learning. An example of which is presentd in Griffiths and Ghahramani(2005) and Yildirim(2012), where IBP is used as a prior in infinite linear-gaussian model.
+IBP can be used as a prior in models for unsupervised learning. An example of which is given in Griffiths and Ghahramani(2005)~\cite{griffiths} and Yildirim(2012)~\cite{yildirim}, where IBP is used as a prior in infinite linear gaussian binary latent feature model.
 
-\subsection{Infinite Latent Features Model}
-We used the linear-gaussian feature model as derived in Griffiths and Ghahramani(2005). We consider a binary feature ownership matrix $Z$ which represents the presence or absence of the underlying features of the observations $X$. Thus each D-dimensional object $x_i$ is generated from a Gaussian distribution:
+\subsection{Infinite Latent Feature Model}
+We used the linear-gaussian feature model as derived in Griffiths and Ghahramani(2005) ~\cite{griffiths}. We consider a binary feature ownership matrix $Z$ which represents the presence or absence of the underlying features of the observations $X$. Thus each D-dimensional object $x_i$ is generated from a Gaussian distribution:
 \[
 x_i \sim Normal(z_iA, \Sigma_X)
 \]
@@ -97,10 +99,12 @@ P(z_{ik}|X,Z_{-(i,k),},\sigma_X,\sigma_A) \propto  P(X|Z,\sigma_X, \sigma_A) * P
 
 Full conditional posterior for $\alpha$ is given by:
 \begin{equation}\label{eq:postalpha}
-P(\alpha|Z) \sim Gamma(1+K_+,1+\sum_{i=1}^{N} H_i)
+P(\alpha|Z) \sim Gamma(1+K_+,1+H_N)
 \end{equation}
 
-To sample the number of new features for observation $i$, we use a truncated distribution, computing probabilities for a range of values $K_{new}^{(i)}$ up to an upper bound (say 3). Using the ikelihood and prior given by Equations \eqref{eq:lik} and \eqref{eq:priork} respectively, we can easily calculate the probability distribution for $K_{new}$ and sample the number of new dishes accordingly.
+Where $H_N$ is the $N^{th}$ harmonic number given by $H_N=\sum_{i=1}^{N} \frac{1}{i}$
+
+To sample the number of new features for observation $i$, we use a truncated distribution, computing probabilities for a range of values $K_{new}^{(i)}$ up to an upper bound (say 3). Using the likelihood and prior given by Equations \eqref{eq:lik} and \eqref{eq:priork} respectively, we can easily calculate the probability distribution for $K_{new}$ and sample the number of new dishes accordingly.
 %\begin{equation}\label{eq:postk}
 %P($K_1$|X, Z, $\sigma_X$, $\sigma_A$) \sim P($K_{new}$)*P(X|Z,\sigma_X, \sigma_A)
 %\end{equation}
@@ -109,13 +113,13 @@ To sample the number of new features for observation $i$, we use a truncated dis
 
 
 \subsubsection{Metropolis-Hastings for $\sigma_X$ and $\sigma_A$}
-For $\sigma_X$ we use random-walk MH algorithm as follows:
+For $\sigma_X$, we use random-walk MH algorithm as follows:
 \begin{eqnarray}
 \epsilon \sim Uniform(-.05,.05)\\
 \sigma_X^{*} =  \sigma_X +\epsilon\\
 \end{eqnarray}
 
-Accept this new $\sigma_X$ with probability given by:
+Accept this new $\sigma_X^{*}$ with probability given by:
 \begin{equation}
 AR = min\{1,\frac{P(X|Z, \sigma_X^{*}, \sigma_A)}{P(X|Z, \sigma_X,\sigma_A)}\}\\
 \end{equation}
@@ -126,15 +130,13 @@ We use similar algorithm to sample $\sigma_A$ where we replace $\sigma_X$ by $\s
 
 
 
-\section{Unit Testing}
-
 \section{Profiling and Optimization}
 We profiled the code using \textit{cProfile} to figure out bottlenecks. The result is shown in \textit{Profiling result}. We see that most of the computational time is spent on calculating the \textit{log likelihood(ll)}  and matrix inversion. Due to this fact, one of the first things we looked at were ways to reduce computation time for likelihood and/or inverse calculation.\\
 
 \VerbatimInput{profiler.txt}
 
 \subsection{Matrix Inversion}
-We tried the matrix inversion method described in Griffiths and Ghahramani(2005, eq 51-54), where the method reduces the runtime by allowing us to perform rank one updates instead when only one value is changed. We implemented the algorithm and were able to speed up the process as shown in Table \ref{compareInverse}.
+We tried the matrix inversion method described in Griffiths and Ghahramani(2005, eq 51-54) ~\cite{griffiths1}, where the method reduces the runtime by allowing us to perform rank one updates instead of full rank updates when only one value is changed. We implemented the algorithm and were able to speed up the process as shown in Table \ref{compareInverse}.
 
 \begin{table}[ht]
 \centering
@@ -158,21 +160,32 @@ While working on the optimized matrix inversion, we noticed that the matrix that
 \subsection{Cython}
 Another way we looked at improving the performance of the code was by cythonizing the code. We again looked at improving the performance of the likelihood function by cythonizing it. As shwon in Table \ref{runtimes}, we were not able to gain substantial improvements from it.\\
 
-
-\subsection{Parallelization and CUDA}
-Since our algorithm is an MCMC algorithm with serial dependence, parallelization does not seem to be a good idea. One of the ways, parallelization can be done is by splitting the chain into multiple smaller chains and combining them back. We tested it and it showed some improvement in the code but decided against using it as the gain wasn't significant enough as we had to take care of multiple burn-in periods and ignore the loss of markov property due to multiple chains. Also, parallelizing the density calculation for likelihood wasn't an option for our algorithm as we had a discrete density with just two points.
-
-
 \begin{table}[ht]
 \centering
 \caption{Runtime Comparision \label{runtimes}}
 \input{latex_tables/Runtimes}
 \end{table}
 
+\subsection{Parallelization and CUDA}
+Since our algorithm is an MCMC algorithm with serial dependence, parallelization does not seem to be a good idea. One of the ways, parallelization can be done is by splitting the chain into multiple smaller chains and combining them back. We tested it and it showed some improvement in the code but decided against using it as the gain wasn't significant enough as we had to take care of multiple burn-in periods and ignore the loss of markov property due to multiple chains. Also, parallelizing the density calculation for likelihood wasn't an option for our algorithm as we had a discrete density with just two points.
+
+
+
+
+\section{Unit Testing}
+To test the validity of the code and functions we performed the following tests.
+
+\begin{itemize}
+\item{test that calcInverse(function for speedy calculation of inverse) gives results numerically close to np.linalg.inv}
+\item{Test that the likelihood is positive.}
+\item{Make sure that likelihood function gives error when $\sigma_A$ and $\sigma_X$ are non-negative}
+\item{Test for convergence of the $\sigma_X$ to the true value of 0.5}
+\item{Make sure that the all the recreated objects have at least one feature as we made that assertion while simulating data}
+\end{itemize}
 
 \section{Application and Results}
 \subsection{Simulated Data}
-We used simulated data similar to Griffiths and Ghahramani(2005) and Yildirim (2012). The data set consists of 100($N$) images $X$, where each image $x_i$ a vector of length 36($D$) representing the $6X6$ dimension of each object. These images were created using 4($K$) latent features (base images) which correspond to the rows of the weight matrix $A$. Each object has .5 probability for presence of each feature. Then the object was created by adding white noise corresponding to $\sigma_X^2=0.5$ as:
+We used simulated data similar to Griffiths and Ghahramani(2005)~cite{griffiths} and Yildirim (2012)~cite{yildirim}. The data set consists of 100($N$) images $X$, where each image $x_i$ a vector of length 36($D$) representing the $6X6$ dimension of each object. These images were created using 4($K$) latent features (base images) which correspond to the rows of the weight matrix $A$. Each object has .5 probability for presence of each feature. Then the object was created by adding white noise corresponding to $\sigma_X^2=0.5$ as:
 \[
 x_i \sim Normal(z_iA, \sigma_X^2I)
 \]
@@ -222,9 +235,26 @@ We used zero variance to ignore the white noise in the recreated images. The res
 \end{figure}
 
 \section{Comparision}
+We compared our algorithm with an implementation of the algorithm in a different language. We calso contrast IBP with similar algorithm that adderesses the same problem i.e. Chinese Restaurant Process.
+\subsection{Comparision with MATLAB implementation of the same algorithm}
+We compared our code with the MATLAB code written by Yildirim~\cite{yildirimweb} and provided on his website. We ran the MATLAB profiler on the code and part of the result is shown in Fig. \ref{fig:profilematlab}. We see that we achieved similar runtime compared to the MATLAB code. Our code turned out to be slightly faster across different runs. Also, our results were consistent with those obtained from the MATLAB code we were comparing against.
+\begin{figure}
+\caption{Result of MATLAB profiler}
+\includegraphics[width=\linewidth]{MatlabProfile.PNG}
+\label{fig:profilematlab}
+\end{figure}
+
+\subsection{IBP and Chinese Restaurant Process}
+
+Chinese Restaurant Process (CRP) is a clustering algorithm which is based on objects previously in the cluster and some parameter $\alpha$. It is explained in the setting of costumers selecting seats in a Chinese restaurant with infinite tables. The process starts with the first customer sitting on the first table. After that, each new customer either chooses an occupied table with probability proportional to number of customers already sitting on that table or chooses an empty table with a probability proportional to the parameter $\alpha$. The process continues until every customer has sit down on a table. This allows for clustering of infinite number of objects into infinite classes.
+
+As explained earlier, in IBP instead of assigning a customer to a cluster, they're assigned latent features(dishes). IBP allows for flexibility as the objects are not restricted to some class with other objects but are described by their own features. We can think of IBP as feature allocation problem whereas CRP is clustering problem. Even though both these processes solve similar problem of classifying objects, the flexibility in IBP makes it a better algorithm in many cases where clustering objects into different classes is too restrictive due to the presence of wide range of features. As an example, if we were clustering the objects from the Infinite latent features model described above, in an ideal situation we'd have $2^K$ clusters and this grows exponentially with increasing features and gets out of had really quickly.
+
 
 \section{Conclusions}
+Nothing here so far..
 
 
-
+\bibliography{Report}{}
+\bibliographystyle{plain}
 \end{document}
